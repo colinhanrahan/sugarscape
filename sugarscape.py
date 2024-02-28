@@ -13,6 +13,8 @@ import math
 import random
 import sys
 
+from memory_profiler import profile
+
 class Sugarscape:
     def __init__(self, configuration):
         self.diseaseConfigHashes = None
@@ -574,6 +576,7 @@ class Sugarscape:
             if self.gui != None:
                 self.gui.doTimestep()
 
+    @profile
     def runSimulation(self, timesteps=5):
         self.startLog()
         if self.gui != None:
