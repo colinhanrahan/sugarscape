@@ -88,7 +88,7 @@ class Agent:
     def addChildToCell(self, mate, cell, childConfiguration):
         sugarscape = self.cell.environment.sugarscape
         childID = sugarscape.generateAgentID()
-        # match child constructor with endowed decision model
+        # Match child constructor with endowed decision model
         if childConfiguration["decisionModel"] == self.decisionModel:
             child = self.spawnChild(childID, self.timestep, cell, childConfiguration)
         else:

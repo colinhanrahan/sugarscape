@@ -13,7 +13,7 @@ def parseDataset(path, dataset, totalTimesteps):
         if not filename.endswith('.json'):
             continue
         filePath = path + filename
-        fileDecisionModel = re.compile(r"([A-Za-z_]+)_?\d*\.json")
+        fileDecisionModel = re.compile(r"([A-z]*)\d*\.json")
         model = re.search(fileDecisionModel, filename).group(1)
         if model not in dataset:
             continue
