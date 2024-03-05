@@ -88,9 +88,9 @@ def getJobsToDo(config, path):
 
 def parseOptions():
     commandLineArgs = sys.argv[1:]
-    shortOptions = "c:p:t:h"
-    longOptions = ("conf=", "path=", "help")
-    options = {"config": None, "path": None}
+    shortOptions = "c:p:s:t:h"
+    longOptions = ("conf=", "path=", "seeds", "help")
+    options = {"config": None, "path": None, "seeds": False}
     try:
         args, vals = getopt.getopt(commandLineArgs, shortOptions, longOptions)
     except getopt.GetoptError as err:
@@ -99,7 +99,7 @@ def parseOptions():
     for currArg, currVal in args:
         if currArg in ("-c", "--conf"):
             if currVal == "":
-                print("No config file provided.")
+                print("No configuration file provided.")
                 printHelp()
             options["config"] = currVal
         elif currArg in ("-p", "--path"):
@@ -109,6 +109,8 @@ def parseOptions():
                 printHelp()
         elif currArg in ("-h", "--help"):
             printHelp()
+        elif currArg in ("-s", "--seeds"):
+            options["seeds"] = True
     if options["config"] == None:
         print("Configuration file path required.")
         printHelp()
@@ -128,7 +130,7 @@ def runSimulations(config, configFiles, path):
     shell += "# Number of parallel processes to run\nN={0}\n\n".format(dataOpts["numParallelSimJobs"])
     shell += "i=1\nj=${#files[@]}\nfor f in \"${files[@]}\"\ndo\n"
     shell += "echo \"Running decision model $f ($i/$j)\"\n# Run simulation for config\n"
-    shell += "{0} ../sugarscape.py --conf $f &\n\n".format(dataOpts["pathToPython"])
+    shell += "{0} ../sugarscape.py --conf $f &\n\n".format(dataOpts["pythonAlias"])
     shell += "if [[ $(jobs -r -p | wc -l) -ge $N ]]; then\nwait -n\nfi\ni=$((i+1))\ndone\n\n"
     shell += "sem=0\necho \"Waiting for jobs to finish up.\"\nwhile [[ $(jobs -r -p | wc -l) -gt 0 ]];\ndo\n"
     shell += "sem=$(((sem+1)%{0}))\nif [[ $sem -eq 0 ]]; then\n".format(dataOpts["jobUpdateFrequency"])
@@ -138,11 +140,12 @@ def runSimulations(config, configFiles, path):
     sh = open("temp.sh", 'w')
     sh.write(shell)
     sh.close()
-    os.system("{0} temp.sh".format(dataOpts["pathToBash"]))
+    os.system("{0} temp.sh".format(dataOpts["bashAlias"]))
     os.remove("temp.sh")
 
 if __name__ == "__main__":
     options = parseOptions()
+    seedsOnly = options["seeds"]
     path = options["path"]
     if path == None:
         path = "./"
@@ -154,12 +157,12 @@ if __name__ == "__main__":
     configFile = open(config)
     config = json.loads(configFile.read())
     configFile.close()
-
     if "dataCollectionOptions" not in config:
         print("Configuration file must have specific data collection options in order to run automated data collection.")
         exit(1)
 
     configFiles = createConfigurations(config, path)
-    runSimulations(config, configFiles, path)
+    if seedsOnly == False:
+        runSimulations(config, configFiles, path)
 
     exit(0)

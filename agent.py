@@ -13,7 +13,9 @@ class Agent:
         self.sugarMetabolism = configuration["sugarMetabolism"]
         self.spiceMetabolism = configuration["spiceMetabolism"]
         self.movement = configuration["movement"]
+        self.movementMode = configuration["movementMode"]
         self.vision = configuration["vision"]
+        self.visionMode = configuration["visionMode"]
         self.sugar = configuration["sugar"]
         self.spice = configuration["spice"]
         self.startingSugar = configuration["sugar"]
@@ -209,6 +211,12 @@ class Agent:
         self.resetCell()
         self.doInheritance()
 
+        # Keep only debtors and children in social network to handle outstanding loans
+        self.socialNetwork = {"debtors": self.socialNetwork["debtors"], "children": self.socialNetwork["children"]}
+        self.neighborhood = []
+        self.vonNeumannNeighbors = {}
+        self.mooreNeighbors = {}
+
     def doDisease(self):
         diseases = self.diseases
         for diseaseRecord in diseases:
@@ -334,7 +342,7 @@ class Agent:
                 continue
             elif borrower.isCreditWorthy(sugarLoanAmount, spiceLoanAmount, self.loanDuration) == True:
                 if "all" in self.debug or "agent" in self.debug:
-                    print("Agent {0} lending [{1},{2}]".format(str(self), sugarLoanAmount, spiceLoanAmount))
+                    print("Agent {0} lending [{1},{2}]".format(self.ID, sugarLoanAmount, spiceLoanAmount))
                 self.addLoanToAgent(borrower, self.lastMoved, sugarLoanPrincipal, sugarLoanAmount, spiceLoanPrincipal, spiceLoanAmount, self.loanDuration)
 
     def doMetabolism(self):
@@ -391,7 +399,7 @@ class Agent:
                     neighbor.spice = neighbor.spice - mateSpiceCost
                     self.lastReproduced = self.cell.environment.sugarscape.timestep
                     if "all" in self.debug or "agent" in self.debug:
-                        print("Agent {0} reproduced with agent {1} at cell ({2},{3})".format(str(self), str(neighbor), emptyCell.x, emptyCell.y))
+                        print("Agent {0} reproduced with agent {1} at cell ({2},{3})".format(self.ID, str(neighbor), emptyCell.x, emptyCell.y))
 
     def doTagging(self):
         if self.tags == None or self.alive == False:
@@ -512,7 +520,7 @@ class Agent:
                 checkForMRSCrossing = spiceSellerNewMRS < sugarSellerNewMRS
                 if betterForSpiceSeller == True and betterForSugarSeller == True and checkForMRSCrossing == False:
                     if "all" in self.debug or "agent" in self.debug:
-                        print("Agent {0} trading [{1}, {2}]".format(str(self), sugarPrice, spicePrice))
+                        print("Agent {0} trading [{1}, {2}]".format(self.ID, sugarPrice, spicePrice))
                     spiceSeller.sugar += sugarPrice
                     spiceSeller.spice -= spicePrice
                     sugarSeller.sugar -= sugarPrice
@@ -602,7 +610,7 @@ class Agent:
         if bestCell == None:
             bestCell = self.cell
         if "all" in self.debug or "agent" in self.debug:
-            print("Agent {0} moving to ({1},{2})".format(str(self), bestCell.x, bestCell.y))
+            print("Agent {0} moving to ({1},{2})".format(self.ID, bestCell.x, bestCell.y))
         return bestCell
 
     def findBestEthicalCell(self, cells, greedyBestCell=None):
@@ -637,7 +645,7 @@ class Agent:
             else:
                 bestCell = greedyBestCell
             if "all" in self.debug or "agent" in self.debug:
-                print("Agent {0} could not find an ethical cell".format(str(self)))
+                print("Agent {0} could not find an ethical cell".format(self.ID))
         return bestCell
 
     def findBestFriend(self):
@@ -658,7 +666,10 @@ class Agent:
         movement = self.findMovement()
         cellRange = min(vision, movement)
         if cellRange > 0:
-            allCells = self.cell.environment.findCellsInRange(cell.x, cell.y, cellRange)
+            if (self.visionMode == "cardinal" and cellRange == vision) or (self.movementMode == "cardinal" and cellRange == movement):
+                allCells = self.cell.environment.findCellsInCardinalRange(cell.x, cell.y, cellRange)
+            else:
+                allCells = self.cell.environment.findCellsInRadialRange(cell.x, cell.y, cellRange)
             if newCell == None:
                 self.cellsInRange = allCells
             return allCells
@@ -680,12 +691,14 @@ class Agent:
         "maxAge": [self.maxAge, mate.maxAge],
         "maxFriends": [self.maxFriends, mate.maxFriends],
         "movement": [self.movement, mate.movement],
+        "movementMode": [self.movementMode, mate.movementMode],
         "selfishnessFactor" : [self.selfishnessFactor, mate.selfishnessFactor],
         "spiceMetabolism": [self.spiceMetabolism, mate.spiceMetabolism],
         "sugarMetabolism": [self.sugarMetabolism, mate.sugarMetabolism],
         "sex": [self.sex, mate.sex],
         "tradeFactor": [self.tradeFactor, mate.tradeFactor],
         "vision": [self.vision, mate.vision],
+        "visionMode": [self.visionMode, mate.visionMode],
         "universalSpice": [self.universalSpice, mate.universalSpice],
         "universalSugar": [self.universalSugar, mate.universalSugar]
         }

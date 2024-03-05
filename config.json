@@ -1,14 +1,14 @@
 {
     "__README__": "Default values for helper scripts. Details can be found in the README.",
     "dataCollectionOptions": {
+        "bashAlias": "bash",
         "decisionModels": ["benthamHalfLookaheadBinary", "egoisticHalfLookaheadBinary", "rawSugarscape"],
         "jobUpdateFrequency": 5,
         "numParallelSimJobs": 1,
         "numSeeds": 100,
-        "pathToBash": "bash",
-        "pathToPython": "python",
         "plots": ["population", "meanttl", "starvationCombat", "wealth", "wealthNormalized", "meanAgeAtDeath"],
-        "plotTimesteps": 1000
+        "plotTimesteps": 1000,
+        "pythonAlias": "python"
     },
     "sugarscapeOptions": {
         "__README__": "Default values for Sugarscape simulation provided here. Details can be found in the README.",
@@ -31,6 +31,7 @@
         "agentMaxAge": [60, 100],
         "agentMaxFriends": [5, 10],
         "agentMovement": [1, 6],
+        "agentMovementMode": "cardinal",
         "agentReplacements": 0,
         "agentSelfishnessFactor": [-1, -1],
         "agentSpiceMetabolism": [1, 4],
@@ -43,6 +44,7 @@
         "agentUniversalSpice": [0, 0],
         "agentUniversalSugar": [0, 0],
         "agentVision": [1, 6],
+        "agentVisionMode": "cardinal",
         "debugMode": ["none"],
         "diseaseAggressionPenalty": [-1, 1],
         "diseaseFertilityPenalty": [-1, 1],
