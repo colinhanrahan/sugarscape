@@ -13,7 +13,7 @@ def parseDataset(path, dataset, totalTimesteps):
         if not filename.endswith('.json'):
             continue
         filePath = path + filename
-        fileDecisionModel = re.compile(r"([A-z]*)\d*\.json")
+        fileDecisionModel = re.compile(r"([A-Za-z_]+)_?\d*\.json")
         model = re.search(fileDecisionModel, filename).group(1)
         if model not in dataset:
             continue
@@ -280,6 +280,11 @@ if __name__ == "__main__":
     configFile.close()
     totalTimesteps = config["plotTimesteps"]
     models = config["decisionModels"]
+    # Flatten nested lists to get joined names
+    for i in range(len(config["decisionModels"])):
+        if isinstance(config["decisionModels"][i], list):
+            config["decisionModels"][i] = '_'.join(config["decisionModels"][i])
+
     dataset = {}
     for model in models:
         dataset[model] = {"runs": 0, "died": 0, "worse": 0, "timesteps": 0, "meanMetrics": {}, "distributionMetrics": {}}

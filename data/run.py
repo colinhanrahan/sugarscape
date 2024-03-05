@@ -58,7 +58,10 @@ def getJobsToDo(config, path):
             continue
         filePath = path + filename
         fileDecisionModel = re.compile(r"([A-z]*)\d*\.config")
-        model = re.search(fileDecisionModel, filename).group(1)
+        model = re.search(fileDecisionModel, filename).group(1).split('_')
+        # Search for single decision models outside of a list
+        if len(model) == 1:
+            model = model[0]
         if model not in dataOpts["decisionModels"]:
             continue
         configs.append(filePath)
