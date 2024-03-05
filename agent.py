@@ -88,7 +88,11 @@ class Agent:
     def addChildToCell(self, mate, cell, childConfiguration):
         sugarscape = self.cell.environment.sugarscape
         childID = sugarscape.generateAgentID()
-        child = self.spawnChild(childID, self.timestep, cell, childConfiguration)
+        # match child constructor with endowed decision model
+        if childConfiguration["decisionModel"] == self.decisionModel:
+            child = self.spawnChild(childID, self.timestep, cell, childConfiguration)
+        else:
+            child = mate.spawnChild(childID, self.timestep, cell, childConfiguration)
         child.gotoCell(cell)
         sugarscape.addAgent(child)
         child.collectResourcesAtCell()
@@ -605,7 +609,7 @@ class Agent:
             cellRecord = {"cell": cell, "wealth": cellWealth, "range": travelDistance}
             potentialCells.append(cellRecord)
 
-        if self.decisionModelFactor > 0:
+        if self.decisionModelFactor > 0 and self.decisionModel != "none":
             bestCell = self.findBestEthicalCell(potentialCells, bestCell)
         if bestCell == None:
             bestCell = self.cell
