@@ -100,8 +100,9 @@ def printHelp():
 def printSummaryStats(dataset):
     print("Model population performance:\n{0:^30} {1:^5} {2:^5} {3:^5}".format("Decision Model", "Died", "Worse", "Better"))
     for model in dataset:
+        formattedModel = formatModels(model)
         better = dataset[model]["runs"] - (dataset[model]["died"] + dataset[model]["worse"])
-        print("{0:^30}: {1:^5} {2:^5} {3:^5}".format(model, dataset[model]["died"], dataset[model]["worse"], better))
+        print("{0:^30}: {1:^5} {2:^5} {3:^5}".format(formattedModel, dataset[model]["died"], dataset[model]["worse"], better))
 
 def printRawData(dataset, totalTimesteps, outfile):
     file = open(outfile, 'w')
@@ -122,153 +123,120 @@ def printRawData(dataset, totalTimesteps, outfile):
         file.write(line)
     file.close()
 
-def generatePlots(config, models, outfile):
+def generatePlots(config, modelFormattings, outfile, pointInterval):
     if "population" in config["plots"]:
-        generatePopulationPlot(models, outfile)
+        generatePopulationPlot(modelFormattings, outfile, pointInterval)
     if "meanttl" in config["plots"]:
-        generateMeanTimeToLivePlot(models, outfile)
+        generateMeanTimeToLivePlot(modelFormattings, outfile, pointInterval)
     if "wealth" in config["plots"]:
-        generateTotalWealthPlot(models, outfile)
+        generateTotalWealthPlot(modelFormattings, outfile, pointInterval)
     if "wealthNormalized" in config["plots"]:
-        generateTotalWealthNormalizedPlot(models, outfile)
+        generateTotalWealthNormalizedPlot(modelFormattings, outfile, pointInterval)
     if "starvationCombat" in config["plots"]:
-        generateStarvationAndCombatPlot(models, outfile)
+        generateStarvationAndCombatPlot(modelFormattings, outfile, pointInterval)
     if "meanAgeAtDeath" in config["plots"]:
-        generateMeanAgeAtDeathPlot(models, outfile)
+        generateMeanAgeAtDeathPlot(modelFormattings, outfile, pointInterval)
 
-def generatePopulationPlot(models, outfile):
+def generatePopulationPlot(modelFormattings, outfile, pointInterval):
     print("Generating population plot script")
     plot = open("population.plg", 'w')
-    config = "set xlabel \"Timestep\"\nset ylabel \"Population\"\nset lt 1 lw 2 lc \"black\"\n"
-    config += "set xtics nomirror\nset ytics nomirror\nset key fixed right bottom\nset term pdf font \"Times,20\"\nset output \"population.pdf\"\n\n"
-    plot.write(config)
-    i = 0
-    j = len(models) - 1
-    lines = ""
-    for model in models:
-        if i == 0:
-            lines += "plot ARGV[1] using 'timestep':'{0}_pop' with linespoints pointinterval 100 pointsize 0.75  lc 'magenta' lt 1 dt 1 pt {1} title 'Utilitarian', \\\n".format(model, j)
-        elif i < len(models) - 1:
-            lines += "\t'' u 'timestep':'{0}_pop' with linespoints pointinterval 100 pointsize 0.75  lc 'cyan' lt 1 dt 1 pt {1} title 'Egoist', \\\n".format(model, j)
-        else:
-            lines += "\t'' u 'timestep':'{0}_pop' with linespoints pointinterval 100 pointsize 0.75  lc 'gold' lt 1 dt 1 pt {1} title 'Raw Sugarscape'".format(model, j)
-        i += 1
-        j -= 1
-    plot.write(lines)
+    writePlotConfig(plot, "Population", "population.pdf")
+    writePlotLines(plot, modelFormattings, "\'{model}_pop\'", pointInterval)
     plot.close()
-    os.system("gnuplot -c population.plg {0}".format(outfile))
+    os.system(f"gnuplot -c population.plg {outfile}")
 
-def generateMeanAgeAtDeathPlot(models, outfile):
+def generateMeanAgeAtDeathPlot(modelFormattings, outfile, pointInterval):
     print("Generating mean age at death plot script")
     plot = open("mean_age_at_death.plg", 'w')
-    config = "set xlabel \"Timestep\"\nset ylabel \"Mean Age at Death\"\nset lt 1 lw 2 lc \"black\"\n"
-    config += "set xtics nomirror\nset ytics nomirror\nset key fixed right bottom\nset term pdf font \"Times,24\"\nset output \"mean_age_at_death.pdf\"\n\n"
-    plot.write(config)
-    i = 0
-    j = len(models) - 1
-    lines = ""
-    for model in models:
-        if i == 0:
-            lines += "plot ARGV[1] using 'timestep':'{0}_maad' with linespoints pointinterval 100 pointsize 0.75  lc 'magenta' lt 1 dt 1 pt {1} title 'Utilitarian', \\\n".format(model, j)
-        elif i < len(models) - 1:
-            lines += "\t'' u 'timestep':'{0}_maad' with linespoints pointinterval 100 pointsize 0.75  lc 'cyan' lt 1 dt 1 pt {1} title 'Egoist', \\\n".format(model, j)
-        else:
-            lines += "\t'' u 'timestep':'{0}_maad' with linespoints pointinterval 100 pointsize 0.75  lc 'gold' lt 1 dt 1 pt {1} title 'Raw Sugarscape'".format(model, j)
-        i += 1
-        j -= 1
-    plot.write(lines)
+    writePlotConfig(plot, "Mean Age at Death", "mean_age_at_death.pdf")
+    writePlotLines(plot, modelFormattings, "\'{model}_maad\'", pointInterval)
     plot.close()
-    os.system("gnuplot -c mean_age_at_death.plg {0}".format(outfile))
+    os.system(f"gnuplot -c mean_age_at_death.plg {outfile}")
 
-
-
-def generateMeanTimeToLivePlot(models, outfile):
+def generateMeanTimeToLivePlot(modelFormattings, outfile, pointInterval):
     print("Generating mean time to live plot script")
     plot = open("meanttl.plg", 'w')
-    config = "set xlabel \"Timestep\"\nset ylabel \"Mean Time to Live\"\nset lt 1 lw 2 lc \"black\"\n"
-    config += "set xtics nomirror\nset ytics nomirror\nset key fixed right top\nset term pdf font \"Times,20\"\nset output \"meanttl.pdf\"\n\n"
-    plot.write(config)
-    i = 0
-    j = len(models) - 1
-    lines = ""
-    for model in models:
-        if i == 0:
-            lines += "plot ARGV[1] using 'timestep':'{0}_mttl' with linespoints pointinterval 100 pointsize 0.75  lc 'magenta' lt 1 dt 1 pt {1} title 'Utilitarian', \\\n".format(model, j)
-        elif i < len(models) - 1:
-            lines += "\t'' u 'timestep':'{0}_mttl' with linespoints pointinterval 100 pointsize 0.75  lc 'cyan' lt 1 dt 1 pt {1} title 'Egoist', \\\n".format(model, j)
-        else:
-            lines += "\t'' u 'timestep':'{0}_mttl' with linespoints pointinterval 100 pointsize 0.75  lc 'gold' lt 1 dt 1 pt {1} title 'Raw Sugarscape'".format(model, j)
-        i += 1
-        j -= 1
-    plot.write(lines)
+    writePlotConfig(plot, "Mean Time to Live", "meanttl.pdf")
+    writePlotLines(plot, modelFormattings, "\'{model}_mttl\'", pointInterval)
     plot.close()
-    os.system("gnuplot -c meanttl.plg {0}".format(outfile))
+    os.system(f"gnuplot -c meanttl.plg {outfile}")
 
-def generateTotalWealthPlot(models, outfile):
+def generateTotalWealthPlot(modelFormattings, outfile, pointInterval):
     print("Generating total wealth plot script")
     plot = open("wealth.plg", 'w')
-    config = "set xlabel \"Timestep\"\nset ylabel \"Total Wealth\"\nset lt 1 lw 2 lc \"black\"\n"
-    config += "set xtics nomirror\nset ytics nomirror\nset key fixed right bottom\nset term pdf font \"Times,20\"\nset output \"wealth.pdf\"\n\n"
-    plot.write(config)
-    i = 0
-    j = len(models) - 1
-    lines = ""
-    for model in models:
-        if i == 0:
-            lines += "plot ARGV[1] using 'timestep':'{0}_welt' with linespoints pointinterval 100 pointsize 0.75  lc 'magenta' lt 1 dt 1 pt {1} title 'Utilitarian', \\\n".format(model, j)
-        elif i < len(models) - 1:
-            lines += "\t'' u 'timestep':'{0}_welt' with linespoints pointinterval 100 pointsize 0.75  lc 'cyan' lt 1 dt 1 pt {1} title 'Egoist', \\\n".format(model, j)
-        else:
-            lines += "\t'' u 'timestep':'{0}_welt' with linespoints pointinterval 100 pointsize 0.75  lc 'gold' lt 1 dt 1 pt {1} title 'Raw Sugarscape'".format(model, j)
-        i += 1
-        j -= 1
-    plot.write(lines)
+    writePlotConfig(plot, "Total Wealth", "wealth.pdf")
+    writePlotLines(plot, modelFormattings, "\'{model}_welt\'", pointInterval)
     plot.close()
-    os.system("gnuplot -c wealth.plg {0}".format(outfile))
+    os.system(f"gnuplot -c wealth.plg {outfile}")
 
-def generateTotalWealthNormalizedPlot(models, outfile):
+def generateTotalWealthNormalizedPlot(modelFormattings, outfile, pointInterval):
     print("Generating total wealth normalized plot script")
     plot = open("wealth_normalized.plg", 'w')
-    config = "set xlabel \"Timestep\"\nset ylabel \"Total Wealth / Population\"\nset lt 1 lw 2 lc \"black\"\n"
-    config += "set xtics nomirror\nset ytics nomirror\nset key fixed right bottom\nset term pdf font \"Times,20\"\nset output \"wealth_normalized.pdf\"\n\n"
-    plot.write(config)
-    i = 0
-    j = len(models) - 1
-    lines = ""
-    for model in models:
-        if i == 0:
-            lines += "plot ARGV[1] using 'timestep':(column('{0}_welt')/column('{0}_pop')) with linespoints pointinterval 100 pointsize 0.75  lc 'magenta' lt 1 dt 1 pt {1} title 'Utilitarian', \\\n".format(model, j)
-        elif i < len(models) - 1:
-            lines += "\t'' u 'timestep':(column('{0}_welt')/column('{0}_pop')) with linespoints pointinterval 100 pointsize 0.75  lc 'cyan' lt 1 dt 1 pt {1} title 'Egoist', \\\n".format(model, j)
-        else:
-            lines += "\t'' u 'timestep':(column('{0}_welt')/column('{0}_pop')) with linespoints pointinterval 100 pointsize 0.75  lc 'gold' lt 1 dt 1 pt {1} title 'Raw Sugarscape'".format(model, j)
-        i += 1
-        j -= 1
-    plot.write(lines)
+    writePlotConfig(plot, "Total Wealth / Population", "wealth_normalized.pdf")
+    writePlotLines(plot, modelFormattings, "(column('{model}_welt')/column('{model}_pop'))", pointInterval)
     plot.close()
-    os.system("gnuplot -c wealth_normalized.plg {0}".format(outfile))
+    os.system(f"gnuplot -c wealth_normalized.plg {outfile}")
 
-def generateStarvationAndCombatPlot(models, outfile):
+def generateStarvationAndCombatPlot(modelFormattings, outfile, pointInterval):
     print("Generating starvation and combat deaths plot script")
     plot = open("deaths.plg", 'w')
-    config = "set xlabel \"Timestep\"\nset ylabel \"Deaths / Population\"\nset lt 1 lw 2 lc \"black\"\n"
-    config += "set xtics nomirror\nset ytics nomirror\nset key fixed right top\nset term pdf font \"Times,24\"\nset output \"deaths.pdf\"\n\n"
-    plot.write(config)
-    i = 0
-    j = len(models) - 1
-    lines = ""
-    for model in models:
-        if i == 0:
-            lines += "plot ARGV[1] using 'timestep':((column('{0}_strv') + column('{0}_comd'))/column('{0}_pop')) with linespoints pointinterval 100 pointsize 0.75  lc 'magenta' lt 1 dt 1 pt {1} title 'Utilitarian', \\\n".format(model, j)
-        elif i < len(models) - 1:
-            lines += "\t'' u 'timestep':((column('{0}_strv') + column('{0}_comd'))/column('{0}_pop')) with linespoints pointinterval 100 pointsize 0.75  lc 'cyan' lt 1 dt 1 pt {1} title 'Egoist', \\\n".format(model, j)
-        else:
-            lines += "\t'' u 'timestep':((column('{0}_strv') + column('{0}_comd'))/column('{0}_pop')) with linespoints pointinterval 100 pointsize 0.75  lc 'gold' lt 1 dt 1 pt {1} title 'Raw Sugarscape'".format(model, j)
-        i += 1
-        j -= 1
-    plot.write(lines)
+    writePlotConfig(plot, "Deaths / Population", "deaths.pdf")
+    writePlotLines(plot, modelFormattings, "((column('{model}_strv') + column('{model}_comd'))/column('{model}_pop'))", pointInterval)
     plot.close()
-    os.system("gnuplot -c deaths.plg {0}".format(outfile))
+    os.system(f"gnuplot -c deaths.plg {outfile}")
+
+def writePlotConfig(file, yLabel, outfile):
+    config = f"set xlabel \"Timestep\"\n"
+    config += f"set ylabel \"{yLabel}\"\n"
+    config += "set lt 1 lw 2 lc \"black\"\n"
+    config += "set xtics nomirror\nset ytics nomirror\n"
+    config += "set key outside above\n"
+    config += f"set term pdf font \"Times,20\"\nset output \"{outfile}\"\n\n"
+    
+    file.write(config)
+
+def writePlotLines(file, modelFormattings, plotVariable, pointInterval):
+    lines = "plot "
+    for formatting in modelFormattings:
+        model = formatting["model"]
+        formattedModel = formatting["formattedModel"]
+        lineColor = formatting["lineColor"]
+        pointType = formatting["pointType"]
+        currentPlotVariable = plotVariable.format(model = model)
+
+        lines += (
+            f'ARGV[1] using \'timestep\':{currentPlotVariable} '
+            f'with linespoints pointinterval {pointInterval} '
+            f'pointsize 0.75 lc \'{lineColor}\' '
+            f'lt 1 dt 1 pt {pointType} title \'{formattedModel}\', \\\n'
+        )
+
+    lines = lines.rstrip(', \\\n')
+    file.write(lines)
+
+def formatModels(models):
+    if '_' in models:
+        return getAbbreviations(models.split('_'))
+    elif models == "none" or models == "rawSugarscape":
+        return "Raw Sugarscape"
+    elif "bentham" in models:
+        return "Utilitarian (" + getUppercase(models) + ")"
+    elif "egoistic" in models:
+        return "Egoist (" + getUppercase(models) + ")"
+    elif "altruistic" in models:
+        return "Altruist (" + getUppercase(models) + ")"
+    else:
+        return "Error getting name"
+
+def getAbbreviations(models):
+    abbreviations = []
+    for model in models:
+        abbreviation = model[0] + getUppercase(model)
+        abbreviations.append(abbreviation)
+    return ', '.join(abbreviations)
+
+def getUppercase(model):
+    return ''.join(char for char in model if char.isupper())
 
 if __name__ == "__main__":
     options = parseOptions()
@@ -280,10 +248,28 @@ if __name__ == "__main__":
     configFile.close()
     totalTimesteps = config["plotTimesteps"]
     models = config["decisionModels"]
-    # Flatten nested lists to get joined names
-    for i in range(len(config["decisionModels"])):
-        if isinstance(config["decisionModels"][i], list):
-            config["decisionModels"][i] = '_'.join(config["decisionModels"][i])
+    # Flatten nested lists to get same model representation as in filename
+    for i in range(len(models)):
+        # models[i] = formatModels(models[i])
+        if isinstance(models[i], list):
+            models[i] = '_'.join(models[i])
+
+    lineColors = ["magenta", "cyan", "gold", "red", "green", "blue"]
+    pointTypes = [0, 1, 2, 4, 6, 8]
+    if len(models) > len(lineColors):
+        print("Warning: More decision models than available colors. Some models will use the same color.")
+    
+    modelFormattings = []
+    for i, model in enumerate(models):
+        formattedModel = formatModels(model)
+        lineColor = lineColors[i % len(lineColors)]
+        pointType = pointTypes[i % len(pointTypes)]
+        modelFormattings.append({
+            "model": model,
+            "formattedModel": formattedModel,
+            "lineColor": lineColor,
+            "pointType": pointType
+        })
 
     dataset = {}
     for model in models:
@@ -296,6 +282,6 @@ if __name__ == "__main__":
     dataset = parseDataset(path, dataset, totalTimesteps)
     dataset = findMeans(dataset)
     printRawData(dataset, totalTimesteps, outfile)
-    generatePlots(config, models, outfile)
+    generatePlots(config, modelFormattings, outfile, totalTimesteps / 10)
     printSummaryStats(dataset)
     exit(0)
