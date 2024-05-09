@@ -1,6 +1,6 @@
 {
-    "__README__": "Default values for helper scripts. Details can be found in the README.",
-    "dataCollectionOptions": {
+    "dataCollectionSettings": {
+        "__INFO__": "Default settings for data collection. Details can be found in the README.",
         "bashAlias": "bash",
         "decisionModels": [["none"]],
         "jobUpdateFrequency": 5,
@@ -10,8 +10,9 @@
         "plotTimesteps": 1000,
         "pythonAlias": "python"
     },
-    "sugarscapeOptions": {
-        "__README__": "Default values for Sugarscape simulation provided here. Details can be found in the README.",
+
+    "defaultSimulationSettings": {
+        "__INFO__": "The default Sugarscape settings for the simulations to run to follow and deviate from.",
         "agentAggressionFactor": [1, 1],
         "agentBaseInterestRate": [0.05, 0.10],
         "agentDecisionModels": ["none"],
@@ -84,5 +85,8 @@
         "startingAgents": 250,
         "startingDiseases": 50,
         "timesteps": 1000
-    }
+    },
+
+    "__SIMULATIONS_TO_RUN__": "The list of simulations to run. By default, runs one simulation with no settings changed from the default config.",
+    "defaultSimulation": {}
 }
