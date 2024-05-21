@@ -230,6 +230,20 @@ class Sugarscape:
             if self.timestep != self.maxTimestep and len(self.agents) > 0:
                 self.writeToLog()
 
+            for agent in self.agents:
+                if len(agent.diseases) == 0:
+                    if agent.vision != agent.findVision():
+                        print(f"Healthy agent {agent.ID} has vision {agent.vision} but findVision() of {agent.findVision()}")
+                    if agent.movement != agent.findMovement():
+                        print(f"Healthy agent {agent.ID} has movement {agent.movement} but findMovement() of {agent.findMovement()}")
+                    
+                    minDistance = min(agent.findVision(), agent.findMovement())
+                    if len(agent.cellsInRange) != minDistance * 4:
+                        print(f"Healthy agent {agent.ID} has {len(agent.cellsInRange)} cells in range but {(minDistance * 4)} theoretically") 
+                        # print(f"Agent age: {agent.age}")
+                        # print(f"Difference (actual - expected): {len(agent.cellsInRange) - minDistance * 4}")
+                        # print(f"Vision modifier: {agent.visionModifier}, movement modifier: {agent.movementModifier}")
+
     def endLog(self):
         if self.log == None:
             return

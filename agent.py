@@ -240,6 +240,7 @@ class Agent:
             if diseaseTags == immuneResponseCheck:
                 self.diseases.remove(diseaseRecord)
                 self.updateDiseaseEffects(diseaseRecord["disease"])
+                self.findCellsInRange()
 
         diseaseCount = len(self.diseases)
         if diseaseCount == 0:
