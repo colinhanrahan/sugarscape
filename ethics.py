@@ -33,10 +33,24 @@ class Bentham(agent.Agent):
             discount = 0.5
             futureDuration = (cellSiteWealth - neighborMetabolism) / neighborMetabolism if neighborMetabolism > 0 else cellSiteWealth
             futureDuration = futureDuration / cellMaxSiteWealth if cellMaxSiteWealth > 0 else 0
-            futureIntensity = cellNeighborWealth / (globalMaxWealth * 4)
-            # Assuming agent can only see in four cardinal directions
+
+            # OLD CODE
+
+            # futureIntensity = cellNeighborWealth / (globalMaxWealth * 4)
+            # # Assuming agent can only see in four cardinal directions
+            # extent = neighborhoodSize / (neighbor.vision * 4) if neighbor.vision > 0 else 1
+            # futureExtent = futureNeighborhoodSize / (neighbor.vision * 4) if neighbor.vision > 0 and self.lookahead != None else 1
+            
+            # NEW CODE
+
+            # Normalize future intensity by number of adjacent cells
+            cellNeighbors = len(neighbor.cell.neighbors)
+            futureIntensity = cellNeighborWealth / (globalMaxWealth * cellNeighbors)
+            # Normalize extent by total cells in range
+            cellsInRange = len(neighbor.cellsInRange) if neighbor.vision > 0 else 1
             extent = neighborhoodSize / (neighbor.vision * 4) if neighbor.vision > 0 else 1
             futureExtent = futureNeighborhoodSize / (neighbor.vision * 4) if neighbor.vision > 0 and self.lookahead != None else 1
+            
             neighborValueOfCell = 0
             # If not the agent moving, consider these as opportunity costs
             if neighbor != self and cell != neighbor.cell and self.selfishnessFactor < 1:
