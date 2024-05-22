@@ -48,6 +48,8 @@ class Bentham(agent.Agent):
                     neighborValueOfCell = neighbor.decisionModelFactor * ((extent * certainty * proximity) * ((intensity + duration) + (discount * (futureIntensity + futureDuration))))
                 else:
                     neighborValueOfCell = neighbor.decisionModelFactor * ((certainty * proximity) * ((extent * (intensity + duration)) + (discount * (futureExtent * (futureIntensity + futureDuration)))))
+            # neighborValueOfCell = 0
+            
             # If move will kill this neighbor, consider this a penalty
             elif neighbor != self and cell == neighbor.cell and self.selfishnessFactor < 1:
                 if self.lookahead == None:
