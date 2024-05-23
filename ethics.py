@@ -38,18 +38,31 @@ class Bentham(agent.Agent):
             extent = neighborhoodSize / (neighbor.vision * 4) if neighbor.vision > 0 else 1
             futureExtent = futureNeighborhoodSize / (neighbor.vision * 4) if neighbor.vision > 0 and self.lookahead != None else 1
             neighborValueOfCell = 0
+
+            # OLD CODE BELOW ---------------------------------------------------------------------------
+
             # If not the agent moving, consider these as opportunity costs
             if neighbor != self and cell != neighbor.cell and self.selfishnessFactor < 1:
+
+                # Possible mates should not incur opportunity cost
+                # if not (self.isFertile() and any(self.isNeighborReproductionCompatible(neighbor) for neighbor in cell.findNeighborAgents())):
                 duration = -1 * duration
                 intensity = -1 * intensity
                 futureDuration = -1 * futureDuration
                 futureIntensity = -1 * futureIntensity
+
                 if self.lookahead == None:
                     neighborValueOfCell = neighbor.decisionModelFactor * ((extent * certainty * proximity) * ((intensity + duration) + (discount * (futureIntensity + futureDuration))))
                 else:
                     neighborValueOfCell = neighbor.decisionModelFactor * ((certainty * proximity) * ((extent * (intensity + duration)) + (discount * (futureExtent * (futureIntensity + futureDuration)))))
+
+            # NEW CODE BELOW ---------------------------------------------------------------------------
+            # replacing opp costs with 0 make it way better   
+            
             # neighborValueOfCell = 0
             
+            # ------------------------------------------------------------------------------------------
+
             # If move will kill this neighbor, consider this a penalty
             elif neighbor != self and cell == neighbor.cell and self.selfishnessFactor < 1:
                 if self.lookahead == None:
