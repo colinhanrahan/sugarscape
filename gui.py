@@ -71,7 +71,7 @@ class GUI:
             environmentColorMenu.add_checkbutton(label=name, onvalue=name, offvalue=name, variable=self.lastSelectedEnvironmentColor, command=self.doEnvironmentColorMenu, indicatoron=True)
         environmentColorButton.grid(row=3, column=2, sticky="nsew")
 
-        statsLabel = tkinter.Label(window, text="Timestep: - \nPopulation: - \nMetabolism: - \nMovement: - \nVision: - \nGini: - \nTrade Price: - \nTrade Volume: - ", font="Roboto 10", justify=tkinter.LEFT, anchor="nw")
+        statsLabel = tkinter.Label(window, text="\nTimestep: - \nPopulation: - \nMetabolism: - \nMovement: - \nVision: - \nGini: - \nTrade Price: - \nTrade Volume: - ", font="Roboto 10", justify=tkinter.LEFT, anchor="nw")
         statsLabel.grid(row=4, column=2, sticky="nsew")
         cellLabel = tkinter.Label(window, text="Cell: - \nSugar: - \nSpice: - \nPollution: - \nSeason: - \n\nAgent: - \nAge: - \nVision: - \nMovement: - \nSugar: - \nSpice: - \nMetabolism: - ", font="Roboto 10", justify=tkinter.LEFT, anchor="nw")
         cellLabel.grid(row=5, column=2, sticky="nsew")
@@ -123,6 +123,13 @@ class GUI:
         window.option_add("*font", "Roboto 10")
         self.configureButtons(window)
         self.configureCanvas()
+
+        self.window.columnconfigure(0, weight=1)                                    # Canvas column
+        self.window.columnconfigure(1, minsize=self.paddingColumnWidth)             # Padding column
+        self.window.columnconfigure(2, minsize=self.infoColumnWidth)                # Control column
+        self.window.columnconfigure(3, weight=1, minsize=self.paddingColumnWidth)   # Padding column
+        self.window.rowconfigure(0, weight=1)   # Upper control column padding
+        self.window.rowconfigure(5, weight=1)   # Lower control column padding
         window.update()
 
         self.window.protocol("WM_DELETE_WINDOW", self.doWindowClose)
@@ -321,20 +328,9 @@ class GUI:
         self.configureCanvas()
         self.configureEnvironment()
 
-        # Adjust column and row weights
-        self.window.columnconfigure(0, weight=1)  # Canvas column
-        self.window.columnconfigure(1, weight=0, minsize=self.paddingColumnWidth)  # Padding column
-        self.window.columnconfigure(2, weight=0, minsize=self.infoColumnWidth)  # Control column
-        self.window.columnconfigure(3, weight=0, minsize=self.paddingColumnWidth)  # Padding column
-        self.window.columnconfigure(4, weight=1)
-        self.window.rowconfigure(0, weight=1)
-        self.window.rowconfigure(5, weight=1)
-        for row in range(1, 5):
-            self.window.rowconfigure(row, weight=0)
-
     def updateLabels(self):
         stats = self.sugarscape.runtimeStats
-        statsString = f"Timestep: {self.sugarscape.timestep} \nPopulation: {stats['population']} \nMetabolism: {stats['meanMetabolism']:.2f} \n" \
+        statsString = f"\nTimestep: {self.sugarscape.timestep} \nPopulation: {stats['population']} \nMetabolism: {stats['meanMetabolism']:.2f} \n" \
                       f"Movement: {stats['meanMovement']:.2f} \nVision: {stats['meanVision']:.2f} \nGini: {stats['giniCoefficient']:.2f} \n" \
                       f"Trade Price: {stats['meanTradePrice']:.2f} \nTrade Volume: {stats['tradeVolume']:.2f}"
         label = self.widgets["statsLabel"]
