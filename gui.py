@@ -17,18 +17,16 @@ class GUI:
                        "benthamNoLookaheadBinary": "#FAFA32", "egoisticNoLookaheadBinary": "#32FAFA", "altruisticNoLookaheadBinary": "#6432FA", "benthamHalfLookaheadTop": "#FA6432",
                        "egoisticHalfLookaheadTop": "#FA6464", "altruisticHalfLookaheadTop": "#64FA64", "benthamNoLookaheadTop": "#3264FA"}
         self.widgets = {}
+        self.infoColumnWidth = 150
+        self.paddingColumnWidth = 20
         self.lastSelectedAgentColor = None
         self.lastSelectedEnvironmentColor = None
         self.highlightedCell = None
         self.highlightedAgent = None
         self.highlightRectangle = None
         self.activeColorOptions = {"agent": None, "environment": None}
-        self.menuTrayColumns = 4
-        self.menuTrayOffset = 110
-        self.windowBorderOffset = 10
-        self.borderEdge = 5
-        self.siteHeight = (self.screenHeight - self.menuTrayOffset) / self.sugarscape.environmentHeight
-        self.siteWidth = (self.screenWidth - self.windowBorderOffset) / self.sugarscape.environmentWidth
+        self.siteHeight = self.screenHeight / self.sugarscape.environmentHeight
+        self.siteWidth = self.screenWidth / self.sugarscape.environmentWidth
         self.configureWindow()
         self.stopSimulation = False
 
@@ -45,9 +43,9 @@ class GUI:
 
     def configureButtons(self, window):
         playButton = tkinter.Button(window, text="Play Simulation", command=self.doPlayButton)
-        playButton.grid(row=0, column=0, sticky="nsew")
+        playButton.grid(row=0, column=2, sticky="sew")
         stepButton = tkinter.Button(window, text="Step Forward", command=self.doStepForwardButton, relief=tkinter.RAISED)
-        stepButton.grid(row=0, column=1, sticky="nsew")
+        stepButton.grid(row=1, column=2, sticky="nsew")
 
         agentColorButton = tkinter.Menubutton(window, text="Agent Coloring", relief=tkinter.RAISED)
         agentColorMenu = tkinter.Menu(agentColorButton, tearoff=0)
@@ -59,7 +57,7 @@ class GUI:
         self.lastSelectedAgentColor.set(agentColorNames[0])  # Default
         for name in agentColorNames:
             agentColorMenu.add_checkbutton(label=name, onvalue=name, offvalue=name, variable=self.lastSelectedAgentColor, command=self.doAgentColorMenu, indicatoron=True)
-        agentColorButton.grid(row=0, column=2, sticky="nsew")
+        agentColorButton.grid(row=2, column=2, sticky="nsew")
 
         environmentColorButton = tkinter.Menubutton(window, text="Environment Coloring", relief=tkinter.RAISED)
         environmentColorMenu = tkinter.Menu(environmentColorButton, tearoff=0)
@@ -71,12 +69,12 @@ class GUI:
         self.lastSelectedEnvironmentColor.set(environmentColorNames[0])  # Default
         for name in environmentColorNames:
             environmentColorMenu.add_checkbutton(label=name, onvalue=name, offvalue=name, variable=self.lastSelectedEnvironmentColor, command=self.doEnvironmentColorMenu, indicatoron=True)
-        environmentColorButton.grid(row=0, column=3, sticky="nsew")
+        environmentColorButton.grid(row=3, column=2, sticky="nsew")
 
-        statsLabel = tkinter.Label(window, text="Timestep: - | Population: - | Metabolism: - | Movement: - | Vision: - | Gini: - | Trade Price: - | Trade Volume: -", font="Roboto 10", justify=tkinter.CENTER)
-        statsLabel.grid(row=1, column=0, columnspan = self.menuTrayColumns, sticky="nsew")
-        cellLabel = tkinter.Label(window, text="Cell: - | Sugar: - | Spice: - | Pollution: - | Season: -\nAgent: - | Age: - | Sugar: - | Spice: - ", font="Roboto 10", justify=tkinter.CENTER)
-        cellLabel.grid(row=2, column=0, columnspan = self.menuTrayColumns, sticky="nsew")
+        statsLabel = tkinter.Label(window, text="Timestep: - \nPopulation: - \nMetabolism: - \nMovement: - \nVision: - \nGini: - \nTrade Price: - \nTrade Volume: - ", font="Roboto 10", justify=tkinter.LEFT, anchor="nw")
+        statsLabel.grid(row=4, column=2, sticky="nsew")
+        cellLabel = tkinter.Label(window, text="Cell: - \nSugar: - \nSpice: - \nPollution: - \nSeason: - \n\nAgent: - \nAge: - \nVision: - \nMovement: - \nSugar: - \nSpice: - \nMetabolism: - ", font="Roboto 10", justify=tkinter.LEFT, anchor="nw")
+        cellLabel.grid(row=5, column=2, sticky="nsew")
 
         self.widgets["playButton"] = playButton
         self.widgets["stepButton"] = stepButton
@@ -88,8 +86,9 @@ class GUI:
         self.widgets["cellLabel"] = cellLabel
 
     def configureCanvas(self):
-        canvas = tkinter.Canvas(self.window, width=self.screenWidth, height=self.screenHeight, bg="white")
-        canvas.grid(row=3, column=0, columnspan=self.menuTrayColumns, sticky="nsew")
+        canvasSize = min(self.screenWidth - self.infoColumnWidth - 2 * self.paddingColumnWidth, self.screenHeight)
+        canvas = tkinter.Canvas(self.window, width=canvasSize, height=canvasSize)
+        canvas.grid(row=0, column=0, rowspan=6, sticky="e")
         canvas.bind("<Button-1>", self.doClick)
         self.canvas = canvas
 
@@ -98,10 +97,10 @@ class GUI:
             for j in range(self.sugarscape.environmentWidth):
                 cell = self.sugarscape.environment.findCell(i, j)
                 fillColor = self.lookupFillColor(cell)
-                x1 = self.borderEdge + i * self.siteWidth # Upper right x coordinate
-                y1 = self.borderEdge + j * self.siteHeight # Upper right y coordinate
-                x2 = self.borderEdge + (i + 1) * self.siteWidth # Lower left x coordinate
-                y2 = self.borderEdge + (j + 1) * self.siteHeight # Lower left y coordinate
+                x1 = i * self.siteWidth # Upper right x coordinate
+                y1 = j * self.siteHeight # Upper right y coordinate
+                x2 = (i + 1) * self.siteWidth # Lower left x coordinate
+                y2 = (j + 1) * self.siteHeight # Lower left y coordinate
                 self.grid[i][j] = {"rectangle": self.canvas.create_rectangle(x1, y1, x2, y2, fill=fillColor, outline="", activestipple="gray50"), "color": fillColor}
         if self.highlightedCell != None:
             self.highlightCell(self.highlightedCell.x, self.highlightedCell.y)
@@ -113,23 +112,17 @@ class GUI:
         window = tkinter.Tk()
         self.window = window
         window.title("Sugarscape")
-        # Do one-quarter window sizing only after initial window object is created to get user's monitor dimensions
+        # Do window sizing only after initial window object is created to get user's monitor dimensions
         if self.screenWidth < 0:
-            self.screenWidth = math.ceil(window.winfo_screenwidth() / 2) - self.borderEdge
+            self.screenWidth = math.ceil(window.winfo_screenwidth() * 0.75)
         if self.screenHeight < 0:
-            self.screenHeight = math.ceil(window.winfo_screenheight() / 2) - self.borderEdge
+            self.screenHeight = math.ceil(window.winfo_screenheight() * 0.75)
         self.updateSiteDimensions()
-        window.geometry("%dx%d" % (self.screenWidth + self.borderEdge, self.screenHeight + self.borderEdge))
+        window.geometry(f"{self.screenWidth}x{self.screenHeight}")
         window.resizable(True, True)
-        window.configure(background="white")
         window.option_add("*font", "Roboto 10")
         self.configureButtons(window)
         self.configureCanvas()
-        window.update()
-
-        self.configureEnvironment()
-        buttonsOffset = self.widgets["playButton"].winfo_height()
-        window.geometry("%dx%d" % (self.screenWidth + self.borderEdge, self.screenHeight + self.borderEdge + buttonsOffset))
         window.update()
 
         self.window.protocol("WM_DELETE_WINDOW", self.doWindowClose)
@@ -151,9 +144,8 @@ class GUI:
         self.doTimestep()
 
     def doClick(self, event):
-        # Account for padding in GUI cells
-        eventX = event.x - self.borderEdge
-        eventY = event.y - self.borderEdge
+        eventX = event.x
+        eventY = event.y
         gridX = math.floor(eventX / self.siteWidth)
         gridY = math.floor(eventY / self.siteHeight)
         # Handle clicking just outside edge cells
@@ -228,16 +220,16 @@ class GUI:
         cell = self.highlightedCell
         if cell != None:
             cellSeason = cell.season if cell.season != None else '-'
-            cellStats = f"Cell: ({cell.x},{cell.y}) | Sugar: {cell.sugar}/{cell.maxSugar} | Spice: {cell.spice}/{cell.maxSpice} | Pollution: {round(cell.pollution, 2)} | Season: {cellSeason}"
+            cellStats = f"Cell: ({cell.x},{cell.y}) \nSugar: {cell.sugar}/{cell.maxSugar} \nSpice: {cell.spice}/{cell.maxSpice} \nPollution: {round(cell.pollution, 2)} \nSeason: {cellSeason} \n"
             agent = cell.agent
             if agent != None:
-                agentStats = (f"Agent: {str(agent)} | Age: {agent.age} | Vision: {round(agent.vision, 2)} | Movement: {round(agent.movement, 2)} | "
-                            + f"Sugar: {round(agent.sugar, 2)} | Spice: {round(agent.spice, 2)} | Metabolism: {round(((agent.sugarMetabolism + agent.spiceMetabolism) / 2), 2)}")
+                agentStats = (f"Agent: {str(agent)} \nAge: {agent.age} \nVision: {round(agent.vision, 2)} \nMovement: {round(agent.movement, 2)} \n"
+                            + f"Sugar: {round(agent.sugar, 2)} \nSpice: {round(agent.spice, 2)} \nMetabolism: {round(((agent.sugarMetabolism + agent.spiceMetabolism) / 2), 2)}")
             else:
-                agentStats = "Agent: - | Age: - | Vision: - | Movement: - | Sugar: - | Spice: - | Metabolism: -"
-            cellStats += f"\n  {agentStats}"
+                agentStats = "Agent: - \nAge: - \nVision: - \nMovement: - \nSugar: - \nSpice: - \nMetabolism: -"
+            cellStats += f"\n{agentStats}"
         else:
-            cellStats = "Cell: - | Sugar: - | Spice: - | Pollution: - | Season: -\nAgent: - | Age: - | Sugar: - | Spice: - "
+            cellStats = "Cell: - \nSugar: - \nSpice: - \nPollution: - \nSeason: - \n\nAgent: - \nAge: - \nVision: - \nMovement: - \nSugar: - \nSpice: - \nMetabolism: - "
         
         label = self.widgets["cellLabel"]
         label.config(text=cellStats)
@@ -251,10 +243,10 @@ class GUI:
         return intvals
     
     def highlightCell(self, x, y):
-        x1 = self.borderEdge + x * self.siteWidth
-        y1 = self.borderEdge + y * self.siteHeight
-        x2 = self.borderEdge + (x + 1) * self.siteWidth
-        y2 = self.borderEdge + (y + 1) * self.siteHeight
+        x1 = x * self.siteWidth
+        y1 = y * self.siteHeight
+        x2 = (x + 1) * self.siteWidth
+        y2 = (y + 1) * self.siteHeight
 
         if self.highlightRectangle != None:
             self.canvas.delete(self.highlightRectangle)
@@ -329,11 +321,22 @@ class GUI:
         self.configureCanvas()
         self.configureEnvironment()
 
+        # Adjust column and row weights
+        self.window.columnconfigure(0, weight=1)  # Canvas column
+        self.window.columnconfigure(1, weight=0, minsize=self.paddingColumnWidth)  # Padding column
+        self.window.columnconfigure(2, weight=0, minsize=self.infoColumnWidth)  # Control column
+        self.window.columnconfigure(3, weight=0, minsize=self.paddingColumnWidth)  # Padding column
+        self.window.columnconfigure(4, weight=1)
+        self.window.rowconfigure(0, weight=1)
+        self.window.rowconfigure(5, weight=1)
+        for row in range(1, 5):
+            self.window.rowconfigure(row, weight=0)
+
     def updateLabels(self):
         stats = self.sugarscape.runtimeStats
-        statsString = f"Timestep: {self.sugarscape.timestep} | Agents: {stats['population']} | Metabolism: {stats['meanMetabolism']:.2f} | " \
-                      f"Movement: {stats['meanMovement']:.2f} | Vision: {stats['meanVision']:.2f} | Gini: {stats['giniCoefficient']:.2f} | " \
-                      f"Trade Price: {stats['meanTradePrice']:.2f} | Trade Volume: {stats['tradeVolume']:.2f}"
+        statsString = f"Timestep: {self.sugarscape.timestep} \nPopulation: {stats['population']} \nMetabolism: {stats['meanMetabolism']:.2f} \n" \
+                      f"Movement: {stats['meanMovement']:.2f} \nVision: {stats['meanVision']:.2f} \nGini: {stats['giniCoefficient']:.2f} \n" \
+                      f"Trade Price: {stats['meanTradePrice']:.2f} \nTrade Volume: {stats['tradeVolume']:.2f}"
         label = self.widgets["statsLabel"]
         label.config(text=statsString)
         if self.highlightedCell != None:
@@ -346,5 +349,6 @@ class GUI:
         self.screenWidth = self.window.winfo_width()
 
     def updateSiteDimensions(self):
-        self.siteHeight = (self.screenHeight - self.menuTrayOffset) / self.sugarscape.environmentHeight
-        self.siteWidth = (self.screenWidth - self.windowBorderOffset) / self.sugarscape.environmentWidth
+        self.siteHeight = self.screenHeight / self.sugarscape.environmentHeight
+        self.siteWidth = (self.screenWidth - self.infoColumnWidth - 2 * self.paddingColumnWidth) / self.sugarscape.environmentWidth
+        self.siteHeight = self.siteWidth = min(self.siteHeight, self.siteWidth)
