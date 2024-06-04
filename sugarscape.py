@@ -100,11 +100,21 @@ class Sugarscape:
         if self.environment == None:
             return
 
-        activeCells = self.findActiveQuadrants()
-        if len(activeCells) == 0:
+        if len(self.configuration["agentStartingQuadrants"]) not in [0, 4]:
+            activeCells = self.findActiveQuadrants()
+            totalCells = len([cell for quadrant in activeCells for cell in quadrant])
+            quadrants = True
+            tribes = []
+            for quadrant in activeCells:
+                random.shuffle(quadrant)
+        else:
+            activeCells = list([cell for row in self.grid for cell in row])
+            totalCells = len(activeCells)
+            quadrants = False
+            random.shuffle(activeCells)
+        if totalCells == 0:
             return
 
-        totalCells = len(activeCells)
         if len(self.agents) + numAgents > totalCells:
             if "all" in self.debug or "sugarscape" in self.debug:
                 print("Could not allocate {0} agents. Allocating maximum of {1}.".format(numAgents, totalCells))
@@ -112,17 +122,21 @@ class Sugarscape:
 
         # Ensure agent endowments are randomized across initial agent count to make replacements follow same distributions
         agentEndowments = self.randomizeAgentEndowments(numAgents)
-        randCoords = activeCells
-        random.shuffle(randCoords)
-
         for i in range(numAgents):
-            randCoord = randCoords.pop()
+            if quadrants == True:
+                tribe = self.findTribeFromTags(agentEndowments[i]["tags"])
+                if tribe not in tribes:
+                    tribes.append(tribe)
+                randCoord = activeCells[tribes.index(tribe)].pop()
+            else:
+                randCoord = activeCells.pop()
             randCellX = randCoord[0]
             randCellY = randCoord[1]
             c = self.environment.findCell(randCellX, randCellY)
             agentConfiguration = agentEndowments[i]
             agentID = self.generateAgentID()
             a = agent.Agent(agentID, self.timestep, c, agentConfiguration)
+
             # If using a different decision model, replace new agent with instance of child class
             if "altruisticHalfLookahead" in agentConfiguration["decisionModel"]:
                 a = ethics.Bentham(agentID, self.timestep, c, agentConfiguration, "halfLookahead")
@@ -268,30 +282,39 @@ class Sugarscape:
     def findActiveQuadrants(self):
         quadrants = self.configuration["agentStartingQuadrants"]
         cellRange = []
-        halfWidth = math.floor(self.environmentWidth / 2)
-        halfHeight = math.floor(self.environmentHeight / 2)
+        quadrantWidth = math.floor(self.environmentWidth / 2.5)
+        quadrantHeight = math.floor(self.environmentHeight / 2.5)
         # Quadrant I at origin in top left corner, other quadrants in clockwise order
         if 1 in quadrants:
-            quadRange = [[(i, j) for j in range(halfHeight)] for i in range(halfWidth)]
-            for i in range(halfWidth):
-                for j in range(halfHeight):
-                    cellRange.append([i, j])
+            quadrantOne = [(i, j) for j in range(quadrantHeight) for i in range(quadrantWidth)]
+            cellRange.append(quadrantOne)
         if 2 in quadrants:
-            quadRange = [[(i, j) for j in range(halfHeight)] for i in range(halfWidth, self.environmentWidth)]
-            for i in range(halfWidth, self.environmentWidth):
-                for j in range(halfHeight):
-                    cellRange.append([i, j])
+            quadrantTwo = [(i, j) for j in range(quadrantHeight) for i in range(self.environmentWidth - quadrantWidth, self.environmentWidth)]
+            cellRange.append(quadrantTwo)
         if 3 in quadrants:
-            quadRange = [[(i, j) for j in range(halfHeight, self.environmentHeight)] for i in range(halfWidth, self.environmentWidth)]
-            for i in range(halfWidth, self.environmentWidth):
-                for j in range(halfHeight, self.environmentHeight):
-                    cellRange.append([i, j])
+            quadrantThree = [(i, j) for j in range(self.environmentHeight - quadrantHeight, self.environmentHeight) for i in range(self.environmentWidth - quadrantWidth, self.environmentWidth)]
+            cellRange.append(quadrantThree)
         if 4 in quadrants:
-            quadRange = [[(i, j) for j in range(halfHeight, self.environmentHeight)] for i in range(halfWidth)]
-            for i in range(halfWidth):
-                for j in range(halfHeight, self.environmentHeight):
-                    cellRange.append([i, j])
+            quadrantFour = [(i, j) for j in range(self.environmentHeight - quadrantHeight, self.environmentHeight) for i in range(quadrantWidth)]
+            cellRange.append(quadrantFour)
         return cellRange
+
+    def findTribeFromTags(self, tags):
+        if tags == None:
+            return None
+        numTribes = self.configuration["environmentMaxTribes"]
+        zeroes = 0
+        tribeCutoff = math.floor(len(tags) / numTribes)
+        # Up to 11 tribes possible without significant color conflicts
+        colors = ["red", "blue", "green", "orange", "purple", "teal", "pink", "mint", "blue2", "yellow", "salmon"]
+        for tag in tags:
+            if tag == 0:
+                zeroes += 1
+        for i in range(1, numTribes + 1):
+            if zeroes < (i * tribeCutoff) + 1 or i == numTribes:
+                return colors[i - 1]
+        # Default agent coloring
+        return "red"
 
     def generateAgentID(self):
         agentID = self.nextAgentID
@@ -926,6 +949,10 @@ def verifyConfiguration(configuration):
 
     if len(configuration["agentStartingQuadrants"]) == 0:
         configuration["agentStartingQuadrants"] = [1, 2, 3, 4]
+    elif configuration["tribalStartingQuadrants"] == True and len(configuration["agentStartingQuadrants"]) != configuration["environmentMaxTribes"]:
+        configuration["environmentMaxTribes"] = len(configuration["agentStartingQuadrants"])
+        if "all" in configuration["debugMode"] or "sugarscape" in configuration["debugMode"]:
+            print(f'Number of tribal starting quadrants must be equal to number of tribes. Setting number of tribes to {len(configuration["agentStartingQuadrants"])}')
 
     # Set timesteps to (seemingly) unlimited runtime
     if configuration["timesteps"] < 0:
@@ -1038,7 +1065,8 @@ if __name__ == "__main__":
                      "seed": -1,
                      "startingAgents": 250,
                      "startingDiseases": 0,
-                     "timesteps": 200
+                     "timesteps": 200,
+                     "tribalStartingQuadrants": False
                      }
     configuration = parseOptions(configuration)
     configuration = verifyConfiguration(configuration)
