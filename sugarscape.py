@@ -108,7 +108,7 @@ class Sugarscape:
             for quadrant in activeCells:
                 random.shuffle(quadrant)
         else:
-            activeCells = list([cell for row in self.grid for cell in row])
+            activeCells = list([cell for row in self.environment.grid for cell in row])
             totalCells = len(activeCells)
             quadrants = False
             random.shuffle(activeCells)
