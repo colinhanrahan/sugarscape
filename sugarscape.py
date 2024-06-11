@@ -127,38 +127,35 @@ class Sugarscape:
                 tribe = self.findTribeFromTags(agentEndowments[i]["tags"])
                 if tribe not in tribes:
                     tribes.append(tribe)
-                randCoord = activeCells[tribes.index(tribe)].pop()
+                randomCell = activeCells[tribes.index(tribe)].pop()
             else:
-                randCoord = activeCells.pop()
-            randCellX = randCoord[0]
-            randCellY = randCoord[1]
-            c = self.environment.findCell(randCellX, randCellY)
+                randomCell = activeCells.pop()
             agentConfiguration = agentEndowments[i]
             agentID = self.generateAgentID()
-            a = agent.Agent(agentID, self.timestep, c, agentConfiguration)
+            a = agent.Agent(agentID, self.timestep, randomCell, agentConfiguration)
 
             # If using a different decision model, replace new agent with instance of child class
             if "altruisticHalfLookahead" in agentConfiguration["decisionModel"]:
-                a = ethics.Bentham(agentID, self.timestep, c, agentConfiguration, "halfLookahead")
+                a = ethics.Bentham(agentID, self.timestep, randomCell, agentConfiguration, "halfLookahead")
                 a.selfishnessFactor = 0
             elif "altruisticNoLookahead" in agentConfiguration["decisionModel"]:
-                a = ethics.Bentham(agentID, self.timestep, c, agentConfiguration)
+                a = ethics.Bentham(agentID, self.timestep, randomCell, agentConfiguration)
                 a.selfishnessFactor = 0
             elif "benthamHalfLookahead" in agentConfiguration["decisionModel"]:
-                a = ethics.Bentham(agentID, self.timestep, c, agentConfiguration, "halfLookahead")
+                a = ethics.Bentham(agentID, self.timestep, randomCell, agentConfiguration, "halfLookahead")
                 if agentConfiguration["selfishnessFactor"] < 0:
                     a.selfishnessFactor = 0.5
             elif "benthamNoLookahead" in agentConfiguration["decisionModel"]:
-                a = ethics.Bentham(agentID, self.timestep, c, agentConfiguration)
+                a = ethics.Bentham(agentID, self.timestep, randomCell, agentConfiguration)
                 if agentConfiguration["selfishnessFactor"] < 0:
                     a.selfishnessFactor = 0.5
             elif "egoisticHalfLookahead" in agentConfiguration["decisionModel"]:
-                a = ethics.Bentham(agentID, self.timestep, c, agentConfiguration, "halfLookahead")
+                a = ethics.Bentham(agentID, self.timestep, randomCell, agentConfiguration, "halfLookahead")
                 a.selfishnessFactor = 1
             elif "egoisticNoLookahead" in agentConfiguration["decisionModel"]:
-                a = ethics.Bentham(agentID, self.timestep, c, agentConfiguration)
+                a = ethics.Bentham(agentID, self.timestep, randomCell, agentConfiguration)
                 a.selfishnessFactor = 1
-            c.agent = a
+            randomCell.agent = a
             self.agents.append(a)
 
         for a in self.agents:
