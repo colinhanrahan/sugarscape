@@ -224,6 +224,28 @@ class Sugarscape:
             if self.timestep != self.maxTimestep and len(self.agents) > 0:
                 self.writeToLog()
 
+            numMismatches = 0
+            for agent in self.agents:
+                for i in range(10):
+                    randX = random.randrange(50)
+                    randY = random.randrange(50)
+                    randCell = self.environment.findCell(randX, randY)
+                    if agent.canReachCellOld(randCell) != agent.canReachCell(randCell):
+                        numMismatches += 1
+                        print(f"agent cell: ({agent.cell.x}, {agent.cell.y})")
+                        print(f"other cell: ({randX}, {randY})")
+                        print(f"canReachCellOld = {agent.canReachCellOld(randCell)}, canReachCellNew = {agent.canReachCell(randCell)}")
+                        width = self.environment.width
+                        height = self.environment.height
+                        deltaX = min(abs(agent.cell.x - randCell.x), width - abs(agent.cell.x - randCell.x))
+                        deltaY = min(abs(agent.cell.y - randCell.y), height - abs(agent.cell.y - randCell.y))
+                        euclideanDistance = math.sqrt(pow(deltaX, 2) + pow(deltaY, 2))
+                        print(f"Euclidean distance = {euclideanDistance}")
+                        # print(f"agent cellsInRange: {agent.cellsInRange}")
+                        print(f"agent vision: {agent.findVision()}, agent movement: {agent.findMovement()}")
+                        print()
+            print(f"num mismatches: {numMismatches}")
+
     def endLog(self):
         if self.log == None:
             return

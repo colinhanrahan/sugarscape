@@ -137,14 +137,29 @@ class Agent:
                 "loanOrigin": timestep}
         self.socialNetwork["creditors"].append(loan)
 
+    def canReachCellOld(self, cell):
+        for seenCell in self.cellsInRange:
+            if seenCell["cell"] == cell:
+                return True
+        return False
+
     def canReachCell(self, cell):
         if cell == self.cell:
-            return True
+            # should be True
+            return False
         vision = self.findVision()
         movement = self.findMovement()
         cellRange = min(vision, movement)
+
+        if self.movementMode == "cardinal" and self.cell.x != cell.x and self.cell.y != cell.y:
+            return False
+
         if cellRange > 0:
-            euclideanDistance = math.sqrt(pow((cell.x - self.cell.x), 2) + pow((cell.y - self.cell.y), 2))
+            width = self.cell.environment.width
+            height = self.cell.environment.height
+            deltaX = min(abs(self.cell.x - cell.x), width - abs(self.cell.x - cell.x))
+            deltaY = min(abs(self.cell.y - cell.y), height - abs(self.cell.y - cell.y))
+            euclideanDistance = math.sqrt(pow(deltaX, 2) + pow(deltaY, 2))
             if euclideanDistance <= cellRange:
                 return True
         return False
@@ -457,6 +472,7 @@ class Agent:
             # If dead from aging, skip remainder of timestep
             if self.alive == False:
                 return
+            self.findCellsInRange()
             self.updateHappiness()
 
     def doUniversalIncome(self):
