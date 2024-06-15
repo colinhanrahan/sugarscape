@@ -138,8 +138,12 @@ class Agent:
         self.socialNetwork["creditors"].append(loan)
 
     def canReachCell(self, cell):
-        for seenCell in self.cellsInRange:
-            if seenCell["cell"] == cell:
+        if cell == self.cell:
+            return True
+        cellRange = min(self.vision, self.movement)
+        if cellRange > 0:
+            euclideanDistance = math.sqrt(pow((cell.x - self.cell.x), 2) + pow((cell.y - self.cell.y), 2))
+            if euclideanDistance <= cellRange:
                 return True
         return False
 
