@@ -140,7 +140,9 @@ class Agent:
     def canReachCell(self, cell):
         if cell == self.cell:
             return True
-        cellRange = min(self.vision, self.movement)
+        vision = self.findVision()
+        movement = self.findMovement()
+        cellRange = min(vision, movement)
         if cellRange > 0:
             euclideanDistance = math.sqrt(pow((cell.x - self.cell.x), 2) + pow((cell.y - self.cell.y), 2))
             if euclideanDistance <= cellRange:
